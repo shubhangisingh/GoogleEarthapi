@@ -1,0 +1,143 @@
+<html>
+<head>
+  <title>Sample</title>
+  <script type="text/javascript" src="https://www.google.com/jsapi"> </script>
+  <script type="text/javascript">
+    var ge;
+    var lat= 30.378179;
+    var lng= 76.776697;
+    var name = "Gesu Home"
+    var dragInfo = null;
+    // Create the placemark.
+
+    google.load("earth", "1", {"other_params":"sensor=true_or_false"});
+
+    function init() {
+
+      google.earth.createInstance('map3d', initCB, failureCB);
+    }
+
+    function initCB(instance) {
+        ge = instance;
+        create_marker(lat,lng,name);
+
+
+        // Look at the placemark we created.
+         var la = ge.createLookAt('');
+         // latitude, longitude, altitude, altitudeMode, heading, tilt, range
+         la.set(lat, lng, 600000, ge.ALTITUDE_RELATIVE_TO_GROUND, 0, 0, 600);
+         // Update the view in Google Earth.
+
+         ge.getView().setAbstractView(la);
+
+        //ge.getWindow().setVisibility(true);
+
+        
+
+        // Listen for mousedown on the window (look specifically for point placemarks).
+        google.earth.addEventListener(ge.getWindow(), 'mousedown', function(event) {
+          if (event.getTarget().getType() == 'KmlPlacemark' &&
+              event.getTarget().getGeometry().getType() == 'KmlPoint') {
+            var placemark = event.getTarget();
+            dragInfo = {
+              placemark: event.getTarget(),
+              dragged: false
+            };
+          }
+        });
+
+
+
+
+        // Listen for mousemove on the globe.
+        google.earth.addEventListener(ge.getGlobe(), 'mousemove', function(event) {
+          if (dragInfo) {
+            event.preventDefault();
+            var point = dragInfo.placemark.getGeometry();
+            point.setLatitude(event.getLatitude());
+            point.setLongitude(event.getLongitude());
+            dragInfo.dragged = true;
+          }
+        });
+
+        // Listen for mouseup on the window.
+        google.earth.addEventListener(ge.getWindow(), 'mouseup', function(event) {
+          if (dragInfo) {
+            if (dragInfo.dragged) {
+              // If the placemark was dragged, prevent balloons from popping up.
+              event.preventDefault();
+            }
+              
+              dragInfo = null;
+            }
+          });
+
+
+
+        //ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS   , true);
+        ge.getOptions().setAtmosphereVisibility(true);
+        ge.getNavigationControl().setVisibility(ge.VISIBILITY_SHOW);
+      }
+
+    function failureCB(errorCode) {
+      }
+
+    function create_marker(lat,lng, name) {
+       // Create the placemark.
+       var placemark = ge.createPlacemark('');
+       placemark.setName(name);
+       // Create point
+       var point = ge.createPoint('');
+       point.setLatitude(lat);
+       point.setLongitude(lng);
+       placemark.setGeometry(point);
+       create_stylemap(placemark);
+       // Add the placemark to Earth.
+       ge.getFeatures().appendChild(placemark);
+      }
+    function create_stylemap(placemark){
+         // Create a style map.
+         var styleMap = ge.createStyleMap('');
+         
+
+         // Create normal style for style map.
+         var normalStyle = ge.createStyle('');
+         var normalIcon = ge.createIcon('');
+         normalIcon.setHref('http://maps.google.com/mapfiles/kml/paddle/red-circle.png');
+         normalStyle.getIconStyle().setIcon(normalIcon);
+         
+         // Create highlight style for style map.
+         var highlightStyle = ge.createStyle('');
+         var highlightIcon = ge.createIcon('');
+         highlightIcon.setHref('http://google-maps-icons.googlecode.com/files/girlfriend.png');
+         highlightStyle.getIconStyle().setIcon(highlightIcon);
+         highlightStyle.getIconStyle().setScale(5.0);
+
+         placemark.setStyleSelector(normalStyle); //apply the style to the placemark
+
+         
+         styleMap.setNormalStyle(normalStyle);
+         styleMap.setHighlightStyle(highlightStyle);
+
+      }
+
+      function buttonClick(lat,lng,name) {
+        
+        
+    create_marker(lat,lng,name);
+  }
+
+    google.setOnLoadCallback(init);
+  </script>
+
+</head>
+<body>
+   <div id="extra-ui" style="position: absolute; left: 520px; top: 0;">
+      <input type="button" onclick="buttonClick(28.543306,77.206775,'Munirika')" value="Mark Munirika"/>
+      <input type="button" onclick="buttonClick(28.459984,77.051949, 'Park Centra')" value="Mark Park Centra"/>
+    </div>
+  </br></br>
+  <div id="map3d" style="border: 1px solid silver; width: 1000px; height: 600px;"></div>
+ 
+</body>
+</html>
